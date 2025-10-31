@@ -11,7 +11,7 @@ void main(){
   runApp(const AplicativoClientes());
 }
 
-class AplicativoClientes extends StatelessElement{
+class AplicativoClientes extends StatelessWidget{
   const AplicativoClientes({super.key});
   
   @override
@@ -23,7 +23,7 @@ class AplicativoClientes extends StatelessElement{
         primarySwatch: Colors.indigo,
         useMaterial3: true
       ),
-      home: const TelaPrincipal(
+      home: TelaPrincipal(
         cliente: Cliente(nome: 'DEV', email: 'dev@gmail.com', senha: '0'),
       ),
     );
