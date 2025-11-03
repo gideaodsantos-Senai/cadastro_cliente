@@ -13,7 +13,7 @@ final ServicoClientes servicoClientes = ServicoClientes();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Garante que o Flutter está pronto.
 
-  // Inicializa o Firebase (OBRIGATÓRIO).
+  // Inicializa o Firebase (OBRIGATÓRsIO).
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
