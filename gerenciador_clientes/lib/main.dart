@@ -100,25 +100,43 @@ class TelaPrincipal extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               // Lista de Clientes Cadastrados
-              Expanded(
-                // Usa o getter 'clientes' do nosso gerenciador.
-                child: ListView.builder(
-                  itemCount: gerenciadorClientes.clientes.length,
-                  itemBuilder: (context, index) {
-                    final c = gerenciadorClientes.clientes[index];
-                    return ListTile(
-                      leading: const Icon(Icons.person),
-                      title: Text(c.nome),
-                      subtitle: Text(c.email),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+             StreamBuilder<List<Cliente>>(
+      // Conecta ao Stream de clientes do nosso serviço Firebase.
+      stream: servicoClientes.clientesStream,
+      builder: (context, snapshot) {
+        // 1. Se houver erro.
+        if (snapshot.hasError) {
+          return const Text('Erro ao carregar clientes.');
+        }
+
+        // 2. Se estiver carregando.
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        // 3. Se os dados estiverem prontos.
+        final clientes = snapshot.data ?? []; // Pega a lista de clientes.
+
+        return Expanded(
+          child: ListView.builder(
+            itemCount: clientes.length,
+            itemBuilder: (context, index) {
+              final c = clientes[index];
+              return ListTile(
+                leading: const Icon(Icons.person),
+                title: Text(c.nome),
+                subtitle: Text(c.email),
+              );
+               },
+            ),
+            );
+            },
+          )
+        ],
       ),
-    );
+     ),
+    ),
+  );
   }
 }
 

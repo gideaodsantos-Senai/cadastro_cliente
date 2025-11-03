@@ -32,8 +32,8 @@ class Cliente {
   }
 
   // 2. Cria um objeto Cliente a partir de um DocumentSnapshot do Firestore.
-  factory Cliente.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
-    final dados = snapshot.data()!;
+  factory Cliente.fromFirestore(DocumentSnapshot snapshot) {
+    final dados = snapshot.data() as Map<String, dynamic>;
     return Cliente(
       id: snapshot.id, // O ID do Firestore é o ID do nosso Cliente.
       nome: dados['nome'] as String,
@@ -86,8 +86,10 @@ class ServicoClientes {
     return _colecao.snapshots().map((snapshot) {
       // Mapeia cada documento para um objeto Cliente.
       return snapshot.docs
-          .map((doc) => Cliente.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>))
+          .map((doc) => Cliente.fromFirestore(doc))
           .toList();
     });
   }
+
+  get clientes => null;
 }
