@@ -1,15 +1,28 @@
+// lib/main.dart (INÍCIO ATUALIZADO)
 import 'package:flutter/material.dart';
-import 'package:gerenciador_clientes/modelos/cliente.dart'; //importa nosso modelo de BD
+import 'modelos/cliente.dart'; // Importa o modelo.
+import 'package:firebase_core/firebase_core.dart'; // NOVO: Para iniciar o Firebase.
 
-//instanciando nosso BD
-final GerenciadorClientes gerenciadorClientes = GerenciadorClientes();
+// NOVO: Importe o arquivo de opções do seu projeto gerado pelo FlutterFire CLI
+import 'firebase_options.dart';
 
-void main() {
-  gerenciadorClientes.cadastrar(
-    Cliente(nome: 'Admin', email: 'admin@email.com', senha: 'admin'),
+// NOVO: Substituímos o GerenciadorClientes pelo ServicoClientes.
+final ServicoClientes servicoClientes = ServicoClientes();
+
+// A função main agora é assíncrona para inicializar o Firebase.
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Garante que o Flutter está pronto.
+
+  // Inicializa o Firebase (OBRIGATÓRIO).
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
   );
+
   runApp(const AplicativoClientes());
 }
+// ...
+// O restante da classe AplicativoClientes permanece o mesmo...
+// ...
 
 class AplicativoClientes extends StatelessWidget {
   const AplicativoClientes({super.key});
@@ -123,31 +136,37 @@ class _EstadoTelaCadastro extends State<TelaCadastro> {
   final _senhaController = TextEditingController();
   String _mensagemErro = '';
 
-  void _fazerCadastro() {
-    if (_chaveForm.currentState!.validate()) { // Se a validação dos campos for OK...
-      final novoCliente = Cliente(
-        nome: _nomeController.text.trim(),
-        email: _emailController.text.trim(),
-        senha: _senhaController.text,
+  // lib/main.dart (APENAS A FUNÇÃO _fazerCadastro DA TELA CADASTRO)
+
+void _fazerCadastro() async { // AGORA É ASYNC
+  if (_chaveForm.currentState!.validate()) {
+    setState(() => _mensagemErro = '');
+
+    final novoCliente = Cliente(
+      nome: _nomeController.text.trim(),
+      email: _emailController.text.trim(),
+      senha: _senhaController.text,
+    );
+
+    // CHAMA O SERVIÇO FIREBASE e AGUARDA O RESULTADO
+    final sucesso = await servicoClientes.cadastrar(novoCliente); // <-- AWAIT AQUI!
+
+    if (sucesso) {
+      // Se sucesso: exibe mensagem e volta para a tela de Login.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Cadastro realizado com sucesso!')),
       );
-
-      // Tenta cadastrar no BD simulado.
-      final sucesso = gerenciadorClientes.cadastrar(novoCliente);
-
-      if (sucesso) {
-        // Se sucesso: exibe uma notificação e volta para a tela de Login.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Cadastro realizado com sucesso!')),
-        );
-        Navigator.pop(context); // Volta para a TelaLogin.
-      } else {
-        // Se falhar (e-mail duplicado).
-        setState(() {
-          _mensagemErro = 'E-mail já cadastrado. Tente outro!';
-        });
-      }
+      Navigator.pop(context);
+    } else {
+      // Se falhar (e-mail duplicado).
+      setState(() {
+        _mensagemErro = 'E-mail já cadastrado. Tente outro!';
+      });
     }
   }
+}
+// ...
+// O build da TelaCadastro permanece o mesmo.
 
   @override
   Widget build(BuildContext context) {
@@ -226,33 +245,39 @@ class _EstadoTelaLogin extends State<TelaLogin> {
   final _senhaController = TextEditingController();
   String _mensagemErro = '';
 
-  void _fazerLogin() {
-    // 1. Validação dos campos
-    if (_chaveForm.currentState!.validate()) {
-      setState(() => _mensagemErro = ''); // Limpa erro.
+  // lib/main.dart (APENAS A FUNÇÃO _fazerLogin DA TELA LOGIN)
 
-      final email = _emailController.text.trim();
-      final senha = _senhaController.text;
+// O botão onPressed deve ser async, e a função _fazerLogin também.
+void _fazerLogin() async { // AGORA É ASYNC
+  // Valida os campos... (código omitido, mas continua o mesmo)
 
-      // 2. Chama o método 'login' do nosso BD simulado.
-      final clienteLogado = gerenciadorClientes.login(email, senha);
+  if (_chaveForm.currentState!.validate()) {
+    setState(() => _mensagemErro = '');
 
-      if (clienteLogado != null) {
-        // 3. Login de sucesso: Navega para a tela principal (substituindo o Login).
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TelaPrincipal(cliente: clienteLogado),
-          ),
-        );
-      } else {
-        // 4. Login falhou.
-        setState(() {
-          _mensagemErro = 'E-mail ou senha incorretos.';
-        });
-      }
+    final email = _emailController.text.trim();
+    final senha = _senhaController.text;
+
+    // CHAMA O SERVIÇO FIREBASE e AGUARDA O RESULTADO
+    final clienteLogado = await servicoClientes.login(email, senha); // <-- AWAIT AQUI!
+
+    if (clienteLogado != null) {
+      // Se sucesso, navega...
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TelaPrincipal(cliente: clienteLogado),
+        ),
+      );
+    } else {
+      // Login falhou...
+      setState(() {
+        _mensagemErro = 'E-mail ou senha incorretos.';
+      });
     }
   }
+}
+// ...
+// O build da TelaLogin permanece o mesmo, mas o onPressed do botão deve chamar a função assíncrona.
 
   @override
   Widget build(BuildContext context) {
